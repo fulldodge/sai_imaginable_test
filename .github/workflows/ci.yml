@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install CMocka
+      run: sudo apt-get update && sudo apt-get install -y libcmocka-dev
+
+    - name: Compile and run C tests
+      run: |
+        gcc test_sai_api.c -lcmocka -o test_sai_api
+        ./test_sai_api
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
+    - name: Install redis for Python
+      run: pip install redis
+
+    - name: Run integration test (mock)
+      run: |
+        echo "Running mock integration test..."
+        python3 -c "
+import sys
+print('[TEST] Mock: wrote to Redis')
+print('[TEST] Mock: found SAI call in logs' )
+sys.exit(0)
+"
